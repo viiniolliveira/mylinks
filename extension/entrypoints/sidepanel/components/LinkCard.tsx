@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link as LinkIcon, MoreVertical, Pencil } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import {
@@ -60,7 +59,7 @@ export function LinkCard({
         )}
 
         <div className="flex min-w-0 flex-col overflow-hidden max-w-full">
-          <span className="text-sm font-medium truncate">{displayTitle}</span>
+          <span className="text-sm font-medium truncate max-w-60">{displayTitle}</span>
           <span className="text-xs text-muted-foreground truncate max-w-60">{displaySubtitle}</span>
         </div>
       </div>

@@ -1,19 +1,20 @@
 import { Context } from "hono";
 import {
-  getLinksByUserId,
+  getLinks,
   createLink,
   deleteLink,
   updateLink,
-  getLinkById
+  getLinkById,
 } from "../services/links";
 
 export const listLinksHandler = async (c: Context) => {
   const userId = c.get("userId");
-  const links = await getLinksByUserId(userId);
+
+  const folderId = c.req.query("folderId") || undefined;
+  const links = await getLinks(userId, folderId);
 
   return c.json({ data: links });
 };
-
 
 export const getLinkHandler = async (c: Context) => {
   const { id } = c.req.param();
@@ -28,7 +29,6 @@ export const getLinkHandler = async (c: Context) => {
 
 export const createLinkHandler = async (c: Context) => {
   const userId = c.get("userId");
-
   const { url, title, description, faviconUrl, folderId } = await c.req.json();
 
   try {
@@ -46,7 +46,6 @@ export const createLinkHandler = async (c: Context) => {
     return c.json({ error: "Failed to create link" }, 500);
   }
 };
-
 
 export const updateLinkHandler = async (c: Context) => {
   const { id } = c.req.param();
@@ -67,10 +66,10 @@ export const updateLinkHandler = async (c: Context) => {
   }
 };
 
-
 export const deleteLinkHandler = async (c: Context) => {
   const { id } = c.req.param();
   console.log(`Deletando link com id: ${id}`);
+
   try {
     await deleteLink(id);
     return c.json({ message: "Link deleted successfully" });

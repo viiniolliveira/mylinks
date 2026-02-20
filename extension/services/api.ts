@@ -36,4 +36,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const requestUrl = error?.config?.url || '';
+
+    if (status === 401 && !requestUrl.includes('/api/auth/login')) {
+      localStorage.removeItem('token');
+
+      if (typeof window !== 'undefined' && window.location?.reload) {
+        window.location.reload();
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export default api;

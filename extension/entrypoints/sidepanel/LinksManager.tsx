@@ -4,7 +4,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { ScrollArea } from '../../components/ui/scroll-area';
-import { Folder, Plus, Settings, Search, LogOut } from 'lucide-react';
+import { Check, Folder, LogOut, Plus, Search, Settings, X } from 'lucide-react';
 import type { Link } from '../../services/links';
 import {
   DropdownMenu,
@@ -13,24 +13,15 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "../../components/ui/dropdown-menu";
-import { createLinkMutationAtom, deleteLinkMutationAtom, linksQueryAtom } from './atoms/links';
+import { createLinkMutationAtom, deleteLinkMutationAtom, folderLinksQueryAtomFamily, linksQueryAtom } from './atoms/links';
+import { createFolderMutationAtom, foldersQueryAtom } from './atoms/folders';
+import { isFolderDeleteModalOpenAtom, selectedFolderForDeleteAtom } from './atoms/folderDelete';
 import { FolderCard } from './components/FolderCard';
 import { LinkCard } from './components/LinkCard';
 import { LinksSkeleton } from './components/LinksSkeleton';
 import { LinkEditModal } from './components/LinkEditModal';
+import { FolderDeleteModal } from './components/FolderDeleteModal';
 import { isLinkEditModalOpenAtom, selectedLinkAtom } from './atoms/linkEditor';
-
-interface FolderItem {
-  id: string;
-  title: string;
-  count?: number;
-}
-
-const folders: FolderItem[] = [
-  { id: 'f-1', title: 'Trabalho', count: 3 },
-  { id: 'f-2', title: 'Design Inspiration', count: 12 },
-  { id: 'f-3', title: 'Leitura Tarde', count: 5 },
-];
 
 interface PageMetadata {
   url: string;
@@ -59,12 +50,81 @@ async function fetchPageMetadata(tabId: number) {
   });
 }
 
+interface FolderLinksListProps {
+  folderId: string;
+  onEdit: (link: Link) => void;
+  onDelete: (id: string) => void;
+}
+
+function FolderLinksList({ folderId, onEdit, onDelete }: FolderLinksListProps) {
+  const {
+    data: folderLinks,
+    isPending,
+    isError,
+    error,
+  } = useAtomValue(folderLinksQueryAtomFamily(folderId));
+
+  if (isPending) {
+    return (
+      <div className="ml-10 py-1 text-xs text-muted-foreground">
+        Carregando links...
+      </div>
+    );
+  }
+
+  if (isError) {
+    const message = error instanceof Error ? error.message : 'Falha ao carregar links';
+    return (
+      <div className="ml-10 py-1 text-xs text-destructive">
+        {message}
+      </div>
+    );
+  }
+
+  if (!folderLinks || folderLinks.length === 0) {
+    return (
+      <div className="ml-10 py-1 text-xs text-muted-foreground">
+        Nenhum link nesta pasta.
+      </div>
+    );
+  }
+
+  return (
+    <div className="ml-6 space-y-1">
+      {folderLinks.map((link) => (
+        <LinkCard
+          key={link.id}
+          title={link.title}
+          url={link.url}
+          description={link.description}
+          faviconUrl={link.faviconUrl}
+          onEdit={() => onEdit(link)}
+          onDelete={() => onDelete(link.id)}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function LinksManager() {
   const { data: links, isPending, isError, error } = useAtomValue(linksQueryAtom);
+  const {
+    data: folders,
+    isPending: isFoldersPending,
+    isError: isFoldersError,
+    error: foldersError,
+  } = useAtomValue(foldersQueryAtom);
   const [{ mutateAsync: createLink, isPending: isSaving }] = useAtom(createLinkMutationAtom);
   const [{ mutateAsync: removeLink, isPending: isDeleting }] = useAtom(deleteLinkMutationAtom);
+  const [{ mutateAsync: createFolder, isPending: isCreatingFolder }] = useAtom(createFolderMutationAtom);
+  const setFolderDeleteModalOpen = useSetAtom(isFolderDeleteModalOpenAtom);
+  const setSelectedFolderForDelete = useSetAtom(selectedFolderForDeleteAtom);
   const [createError, setCreateError] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [createFolderError, setCreateFolderError] = useState('');
+  const [isCreatingFolderInput, setIsCreatingFolderInput] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [openFolderIds, setOpenFolderIds] = useState<string[]>([]);
   const setEditModalOpen = useSetAtom(isLinkEditModalOpenAtom);
   const setSelectedLink = useSetAtom(selectedLinkAtom);
   const navigate = useNavigate();
@@ -78,6 +138,12 @@ export default function LinksManager() {
     ? error instanceof Error
       ? error.message
       : 'Falha ao carregar links'
+    : '';
+
+  const foldersErrorMessage = isFoldersError
+    ? foldersError instanceof Error
+      ? foldersError.message
+      : 'Falha ao carregar pastas'
     : '';
 
   const handleSaveCurrentLink = async () => {
@@ -141,6 +207,54 @@ export default function LinksManager() {
     setEditModalOpen(true);
   };
 
+  const handleOpenDeleteFolder = (folderId: string) => {
+    const folder = (folders ?? []).find((item) => item.id === folderId) || null;
+    setSelectedFolderForDelete(folder);
+    setFolderDeleteModalOpen(true);
+  };
+
+  const handleStartCreateFolder = () => {
+    setIsCreatingFolderInput(true);
+    setNewFolderName('');
+    setCreateFolderError('');
+  };
+
+  const handleCancelCreateFolder = () => {
+    setIsCreatingFolderInput(false);
+    setNewFolderName('');
+    setCreateFolderError('');
+  };
+
+  const handleToggleFolder = (id: string) => {
+    setOpenFolderIds((prev) =>
+      prev.includes(id) ? prev.filter((folderId) => folderId !== id) : [...prev, id]
+    );
+  };
+
+  const handleCreateFolder = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setCreateFolderError('');
+
+    const name = newFolderName.trim();
+
+    if (!name) {
+      setCreateFolderError('Nome da pasta e obrigatorio');
+      return;
+    }
+
+    try {
+      await createFolder({ name });
+      setIsCreatingFolderInput(false);
+      setNewFolderName('');
+    } catch (err) {
+      if (err instanceof Error) {
+        setCreateFolderError(err.message);
+      } else {
+        setCreateFolderError('Falha ao criar pasta');
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background w-full max-w-100 mx-auto">
       {/* Header */}
@@ -165,10 +279,48 @@ export default function LinksManager() {
 
       {/* Actions */}
       <div className="p-4 flex items-center justify-between gap-2">
-        <Button variant="outline" className="flex-1 justify-start gap-2 h-9 text-gray-600">
-          <Folder className="h-4 w-4" />
-          Nova Pasta
-        </Button>
+        {isCreatingFolderInput ? (
+          <form onSubmit={handleCreateFolder} className="flex items-center gap-2 w-full">
+            <div className="flex items-center gap-2 flex-1 h-9 px-2 rounded-md border bg-background">
+              <Folder className="h-4 w-4 text-muted-foreground" />
+              <Input
+                value={newFolderName}
+                onChange={(event) => setNewFolderName(event.target.value)}
+                placeholder="Nome da pasta"
+                className="h-8 border-0 px-0 focus-visible:ring-0"
+                autoFocus
+                disabled={isCreatingFolder}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={handleCancelCreateFolder}
+              disabled={isCreatingFolder}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <Button
+              type="submit"
+              size="icon"
+              className="h-9 w-9"
+              disabled={isCreatingFolder || !newFolderName.trim()}
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          </form>
+        ) : (
+          <Button
+            variant="outline"
+            className="flex-1 justify-start gap-2 h-9 text-gray-600"
+            onClick={handleStartCreateFolder}
+          >
+            <Folder className="h-4 w-4" />
+            Nova Pasta
+          </Button>
+        )}
       </div>
 
       {/* Search */}
@@ -190,6 +342,14 @@ export default function LinksManager() {
         </div>
       )}
 
+      {isFoldersError && (
+        <div className="px-4 mb-3">
+          <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+            {foldersErrorMessage}
+          </div>
+        </div>
+      )}
+
       {createError && (
         <div className="px-4 mb-3">
           <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
@@ -206,19 +366,39 @@ export default function LinksManager() {
         </div>
       )}
 
+
+      {createFolderError && (
+        <div className="px-4 mb-3">
+          <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+            {createFolderError}
+          </div>
+        </div>
+      )}
+
       {/* List */}
       <ScrollArea className="flex-1 px-4">
         <div className="space-y-1 pb-20">
-          {isPending ? (
+          {isPending || isFoldersPending ? (
             <LinksSkeleton />
           ) : (
             <>
-              {folders.map((folder) => (
-                <FolderCard
-                  key={folder.id}
-                  title={folder.title}
-                  count={folder.count}
-                />
+              {(folders ?? []).map((folder) => (
+                <div key={folder.id} className="space-y-1">
+                  <FolderCard
+                    title={folder.name}
+                    count={folder.totalLinks}
+                    isOpen={openFolderIds.includes(folder.id)}
+                    onOpen={() => handleToggleFolder(folder.id)}
+                    onDelete={() => handleOpenDeleteFolder(folder.id)}
+                  />
+                  {openFolderIds.includes(folder.id) && (
+                    <FolderLinksList
+                      folderId={folder.id}
+                      onEdit={handleEditLink}
+                      onDelete={handleDeleteLink}
+                    />
+                  )}
+                </div>
               ))}
               {(links ?? []).map((link) => (
                 <LinkCard
@@ -231,7 +411,7 @@ export default function LinksManager() {
                   onDelete={() => handleDeleteLink(link.id)}
                 />
               ))}
-              {folders.length === 0 && (links ?? []).length === 0 && (
+              {(folders ?? []).length === 0 && (links ?? []).length === 0 && (
                 <div className="py-8 text-center text-sm text-muted-foreground">
                   Nenhum link encontrado.
                 </div>
@@ -254,6 +434,7 @@ export default function LinksManager() {
       </div>
 
       <LinkEditModal />
+      <FolderDeleteModal />
     </div>
   );
 }

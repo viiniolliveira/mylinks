@@ -5,10 +5,8 @@ import { links } from "@/controllers/links";
 const linksRouter = new Hono();
 
 
-linksRouter.use('/*', userAuth); // Aplica o middleware de autenticação a todas as rotas de links
-
+linksRouter.use('*', userAuth);
 linksRouter.get("/", links.listLinksHandler);
-
 linksRouter.post("/", links.createLinkHandler);
 
 

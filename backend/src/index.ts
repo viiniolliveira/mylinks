@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import authRouter from './routes/auth'
 import linksRouter from './routes/links'
-import foldersRouter from './controllers/folders'
+import foldersRouter from './routes/folders'
 
 const app = new Hono().basePath('/api')
 

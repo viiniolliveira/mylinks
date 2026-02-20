@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Folder, MoreVertical } from 'lucide-react';
+import { ChevronRight, Folder, FolderOpen, MoreVertical } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
 interface FolderCardProps {
   title: string;
   count?: number | null;
+  isOpen?: boolean;
   onOpen?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -19,15 +20,18 @@ interface FolderCardProps {
 export function FolderCard({
   title,
   count,
+  isOpen = false,
   onOpen,
   onEdit,
   onDelete,
 }: FolderCardProps) {
+  const FolderIcon = isOpen ? FolderOpen : Folder;
+
   return (
     <div className="group flex items-center justify-between p-2 hover:bg-secondary rounded-lg cursor-pointer transition-colors">
       <div className="flex items-center gap-3 overflow-hidden" onClick={onOpen}>
         <div className="w-8 h-8 bg-amber-100 rounded flex items-center justify-center text-amber-600">
-          <Folder size={18} fill="currentColor" className="opacity-80" />
+          <FolderIcon size={18} className="opacity-80" />
         </div>
 
         <div className="flex flex-col overflow-hidden">
@@ -37,16 +41,7 @@ export function FolderCard({
           </span>
         </div>
       </div>
-
       <div className="flex items-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-gray-400"
-          onClick={onOpen}
-        >
-          <ChevronRight size={18} />
-        </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
