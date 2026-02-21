@@ -9,7 +9,7 @@ export interface CreateLinkInput {
   folderId?: string | null;
 }
 
-export type UpdateLinkInput = Omit<CreateLinkInput, 'userId'>;
+export type UpdateLinkInput = Partial<CreateLinkInput>;
 
 export interface Link extends CreateLinkInput {
   id: string;

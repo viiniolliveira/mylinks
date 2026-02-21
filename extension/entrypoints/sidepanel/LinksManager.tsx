@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import type { Link } from '../../services/links';
-import { createLinkMutationAtom, deleteLinkMutationAtom, linksQueryAtom } from './atoms/links';
+import { createLinkMutationAtom, deleteLinkMutationAtom, linksQueryAtom, updateLinkMutationAtom } from './atoms/links';
 import { createFolderMutationAtom, foldersQueryAtom } from './atoms/folders';
 import { isFolderDeleteModalOpenAtom, selectedFolderForDeleteAtom } from './atoms/folderDelete';
+import { isFolderEditModalOpenAtom, selectedFolderForEditAtom } from './atoms/folderEdit';
 import { LinksHeader } from './components/LinksHeader';
 import { FolderCreateBar } from './components/FolderCreateBar';
 import { LinksSearchBar } from './components/LinksSearchBar';
@@ -13,6 +14,7 @@ import { LinksList } from './components/LinksList';
 import { SaveCurrentLinkBar } from './components/SaveCurrentLinkBar';
 import { LinkEditModal } from './components/LinkEditModal';
 import { FolderDeleteModal } from './components/FolderDeleteModal';
+import { FolderEditModal } from './components/FolderEditModal';
 import { isLinkEditModalOpenAtom, selectedLinkAtom } from './atoms/linkEditor';
 
 interface PageMetadata {
@@ -52,9 +54,12 @@ export default function LinksManager() {
   } = useAtomValue(foldersQueryAtom);
   const [{ mutateAsync: createLink, isPending: isSaving }] = useAtom(createLinkMutationAtom);
   const [{ mutateAsync: removeLink, isPending: isDeleting }] = useAtom(deleteLinkMutationAtom);
+  const [{ mutateAsync: updateLink }] = useAtom(updateLinkMutationAtom);
   const [{ mutateAsync: createFolder, isPending: isCreatingFolder }] = useAtom(createFolderMutationAtom);
   const setFolderDeleteModalOpen = useSetAtom(isFolderDeleteModalOpenAtom);
   const setSelectedFolderForDelete = useSetAtom(selectedFolderForDeleteAtom);
+  const setFolderEditModalOpen = useSetAtom(isFolderEditModalOpenAtom);
+  const setSelectedFolderForEdit = useSetAtom(selectedFolderForEditAtom);
   const [createError, setCreateError] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [createFolderError, setCreateFolderError] = useState('');
@@ -153,6 +158,12 @@ export default function LinksManager() {
     setFolderDeleteModalOpen(true);
   };
 
+  const handleOpenEditFolder = (folderId: string) => {
+    const folder = (folders ?? []).find((item) => item.id === folderId) || null;
+    setSelectedFolderForEdit(folder);
+    setFolderEditModalOpen(true);
+  };
+
   const handleStartCreateFolder = () => {
     setIsCreatingFolderInput(true);
     setNewFolderName('');
@@ -195,6 +206,14 @@ export default function LinksManager() {
     }
   };
 
+  const handleMoveLink = async (linkId: string, folderId: string | null) => {
+    try {
+      await updateLink({ id: linkId, data: { folderId } });
+    } catch (err) {
+      console.error('Failed to move link', err);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background w-full max-w-100 mx-auto">
       <LinksHeader onLogout={handleLogout} />
@@ -225,6 +244,8 @@ export default function LinksManager() {
         onOpenDeleteFolder={handleOpenDeleteFolder}
         onEditLink={handleEditLink}
         onDeleteLink={handleDeleteLink}
+        onEditFolder={(folder) => handleOpenEditFolder(folder.id)}
+        onMoveLink={handleMoveLink}
       />
       <SaveCurrentLinkBar
         onSave={handleSaveCurrentLink}
@@ -234,6 +255,7 @@ export default function LinksManager() {
 
       <LinkEditModal />
       <FolderDeleteModal />
+      <FolderEditModal />
     </div>
   );
 }

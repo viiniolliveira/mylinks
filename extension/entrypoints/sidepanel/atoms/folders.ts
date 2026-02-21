@@ -1,5 +1,5 @@
 import { atomWithMutation, atomWithQuery, queryClientAtom } from 'jotai-tanstack-query';
-import { createFolder, deleteFolder, getFolders, type CreateFolderInput } from '../../../services/folders';
+import { createFolder, deleteFolder, getFolders, updateFolder, type CreateFolderInput } from '../../../services/folders';
 
 export const foldersQueryAtom = atomWithQuery(() => ({
   queryKey: ['folders'],
@@ -11,6 +11,15 @@ export const foldersQueryAtom = atomWithQuery(() => ({
 export const createFolderMutationAtom = atomWithMutation((get) => ({
   mutationKey: ['create-folder'],
   mutationFn: (payload: CreateFolderInput) => createFolder(payload),
+  onSuccess: () => {
+    const queryClient = get(queryClientAtom);
+    queryClient.invalidateQueries({ queryKey: ['folders'] });
+  },
+}));
+
+export const updateFolderMutationAtom = atomWithMutation((get) => ({
+  mutationKey: ['update-folder'],
+  mutationFn: ({ id, payload }: { id: string; payload: CreateFolderInput }) => updateFolder(id, payload),
   onSuccess: () => {
     const queryClient = get(queryClientAtom);
     queryClient.invalidateQueries({ queryKey: ['folders'] });

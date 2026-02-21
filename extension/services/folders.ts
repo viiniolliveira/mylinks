@@ -48,6 +48,23 @@ export async function createFolder(payload: CreateFolderInput): Promise<Folder> 
   return response.data as Folder;
 }
 
+export async function updateFolder(id: string, payload: CreateFolderInput): Promise<Folder> {
+  const response = await api.put<Folder | FolderResponse>(`/api/folders/${id}`, payload);
+
+  if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+    const data = response.data.data;
+    if (Array.isArray(data)) {
+      if (!data[0]) {
+        throw new Error('Resposta invalida ao atualizar pasta');
+      }
+      return data[0];
+    }
+    return data;
+  }
+
+  return response.data as Folder;
+}
+
 export async function deleteFolder(id: string): Promise<void> {
   await api.delete(`/api/folders/${id}`);
 }
