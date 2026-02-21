@@ -1,5 +1,4 @@
-import React from 'react';
-import { ChevronRight, Folder, FolderOpen, MoreVertical } from 'lucide-react';
+import { Folder, FolderOpen, MoreVertical } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import {
   DropdownMenu,
@@ -30,7 +29,7 @@ export function FolderCard({
   return (
     <div className="group flex items-center justify-between p-2 hover:bg-secondary rounded-lg cursor-pointer transition-colors">
       <div className="flex items-center gap-3 overflow-hidden" onClick={onOpen}>
-        <div className="w-8 h-8 bg-amber-100 rounded flex items-center justify-center text-amber-600">
+        <div className="w-8 h-8 bg-primary-foreground rounded flex items-center justify-center text-amber-600">
           <FolderIcon size={18} className="opacity-80" />
         </div>
 
