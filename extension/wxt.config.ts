@@ -5,7 +5,20 @@ export default defineConfig({
   manifest: {
     name: 'MyLinks',
     permissions: ['sidePanel', 'storage', 'tabs'],
-    action: {}, // Required for chrome.action.onClicked
+    icons: {
+      16: 'link.png',
+      32: 'link.png',
+      48: 'link.png',
+      128: 'link.png',
+    },
+    action: {
+      default_icon: {
+        16: 'link.png',
+        32: 'link.png',
+        48: 'link.png',
+        128: 'link.png',
+      },
+    },
     side_panel: {
       default_path: 'sidepanel.html',
     },

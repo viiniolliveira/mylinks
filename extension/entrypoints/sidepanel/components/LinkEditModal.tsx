@@ -59,7 +59,7 @@ export function LinkEditModal() {
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
 
@@ -155,7 +155,7 @@ export function LinkEditModal() {
             </Select>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className='gap-2'>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               Cancelar
             </Button>

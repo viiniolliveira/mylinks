@@ -16,7 +16,7 @@ import {
 export const linksQueryAtom = atomWithQuery(() => ({
   queryKey: ["links"],
   queryFn: () => getLinks(),
-  cacheTime: 1000 * 60 * 5, // 5 minutos
+  cacheTime: 1000 * 60 * 10, // 10 minutos
   staleTime: 1000 * 60 * 10, // 10 minutos
 }));
 
@@ -24,7 +24,7 @@ export const folderLinksQueryAtomFamily = atomFamily((folderId: string) =>
   atomWithQuery(() => ({
     queryKey: ["links", "folder", folderId],
     queryFn: () => getLinks({ folderId }),
-    cacheTime: 1000 * 60 * 5, // 5 minutos
+    cacheTime: 1000 * 60 * 10, // 10 minutos
     staleTime: 1000 * 60 * 10, // 10 minutos
   })),
 );

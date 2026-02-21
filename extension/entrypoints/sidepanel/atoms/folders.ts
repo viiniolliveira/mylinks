@@ -4,6 +4,8 @@ import { createFolder, deleteFolder, getFolders, type CreateFolderInput } from '
 export const foldersQueryAtom = atomWithQuery(() => ({
   queryKey: ['folders'],
   queryFn: () => getFolders(),
+  cacheTime: 1000 * 60 * 10, // 10 minutos
+  staleTime: 1000 * 60 * 10, // 10 minutos
 }));
 
 export const createFolderMutationAtom = atomWithMutation((get) => ({

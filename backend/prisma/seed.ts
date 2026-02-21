@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
-const USER_EMAIL = process.env.SEED_USER_EMAIL!
-const USER_PASSWORD = process.env.SEED_USER_PASSWORD!
+const USER_EMAIL = process.env.USER_EMAIL!
+const USER_PASSWORD = process.env.USER_PASSWORD!
 
 interface CreateLinkInput {
     url: string;
