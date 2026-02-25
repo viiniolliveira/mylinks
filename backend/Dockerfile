@@ -15,7 +15,7 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . .
 
 # 1. Injetamos uma URL falsa apenas para o build passar!
-ENV DATABASE_URL="postgresql://fake:fake@localhost:5432/fake"
+ENV DATABASE_URL=postgresql://fake:fake@localhost:5432/fake
 
 RUN bun run db:generate
 
