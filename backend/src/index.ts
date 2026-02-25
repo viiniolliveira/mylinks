@@ -3,15 +3,15 @@ import { logger } from "hono/logger";
 import authRouter from "./routes/auth";
 import linksRouter from "./routes/links";
 import foldersRouter from "./routes/folders";
-import { createAdmin } from "../prisma/create-admin";
+import { createAdmin, runMigrations } from "../prisma/start-process";
 
 const app = new Hono().basePath("/api");
 
 app.use(logger());
 
 async function bootstrap() {
+  runMigrations();
   await createAdmin();
-
   app.route("/auth", authRouter);
   app.route("/links", linksRouter);
   app.route("/folders", foldersRouter);

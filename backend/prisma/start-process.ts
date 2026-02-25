@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { execSync } from "child_process";
 
 const USER_EMAIL = process.env.USER_EMAIL!;
 const USER_PASSWORD = process.env.USER_PASSWORD!;
@@ -25,3 +26,7 @@ export async function createAdmin() {
 }
 
 
+
+export function runMigrations() {
+  execSync("bunx prisma migrate deploy", { stdio: "inherit" });
+}

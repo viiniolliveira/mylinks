@@ -6,12 +6,14 @@
     "start": "bun dist/index.js",
     "db:push": "bunx --bun prisma db push",
     "db:generate": "bunx --bun prisma generate",
+    "db:migrate:dev": "bunx --bun prisma migrate dev",
+    "db:migrate:deploy": "bunx --bun prisma migrate deploy",
+    "db:sync": "bunx --bun prisma db pull",
     "db:seed": "bunx --bun prisma db seed",
     "docker:build": "docker build -t mylinks-backend .",
     "docker:run": "docker run --env-file .env -p 8000:8000 mylinks-backend",
     "compose:up": "docker compose up -d",
     "compose:down": "docker compose down"
-
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",
