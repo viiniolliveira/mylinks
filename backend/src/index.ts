@@ -1,22 +1,28 @@
-import { Hono } from 'hono'
-import { logger } from 'hono/logger'
-import authRouter from './routes/auth'
-import linksRouter from './routes/links'
-import foldersRouter from './routes/folders'
+import { Hono } from "hono";
+import { logger } from "hono/logger";
+import authRouter from "./routes/auth";
+import linksRouter from "./routes/links";
+import foldersRouter from "./routes/folders";
+import { createAdmin } from "../prisma/create-admin";
 
-const app = new Hono().basePath('/api')
+const app = new Hono().basePath("/api");
 
-app.use(logger())
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+app.use(logger());
 
-app.route('/auth', authRouter)
-app.route('/links', linksRouter)
-app.route('/folders', foldersRouter)
+async function bootstrap() {
+  await createAdmin();
 
+  app.route("/auth", authRouter);
+  app.route("/links", linksRouter);
+  app.route("/folders", foldersRouter);
+}
+
+bootstrap().catch((err) => {
+  console.error("Erro no bootstrap:", err);
+  process.exit(1);
+});
 
 export default {
   port: 8000,
   fetch: app.fetch,
-}
+};

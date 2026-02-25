@@ -8,7 +8,10 @@
     "db:generate": "bunx --bun prisma generate",
     "db:seed": "bunx --bun prisma db seed",
     "docker:build": "docker build -t mylinks-backend .",
-    "docker:run": "docker run --env-file .env -p 8000:8000 mylinks-backend"
+    "docker:run": "docker run --env-file .env -p 8000:8000 mylinks-backend",
+    "compose:up": "docker compose up -d",
+    "compose:down": "docker compose down"
+
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",
